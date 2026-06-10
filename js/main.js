@@ -1,103 +1,76 @@
-        // ===== Background video: play once, freeze on last frame =====
-        // No scroll linkage. The video plays through normally and holds its
-        // final frame when it ends.
-        const video = document.querySelector('.page-bg video');
+import { animate, createTimeline, stagger, utils } from './vendor/anime.esm.min.js';
 
-        // Hold the last frame: 'loop' is off, and when it ends we pin currentTime.
-        video.loop = false;
-        video.addEventListener('ended', function() {
-            // Park just before the very end so the last frame stays painted
-            // (some browsers blank the frame exactly at duration).
-            if (video.duration) {
-                video.currentTime = Math.max(0, video.duration - 0.05);
-            }
-        });
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        // Fade out the "Guido Tomasella" name 3s before the video ends —
-        // the video itself ends on the name, so it would be redundant.
-        let nameFadeArmed = true;
-        video.addEventListener('timeupdate', function() {
-            if (!nameFadeArmed || !video.duration) return;
-            if (video.currentTime >= video.duration - 3) {
-                nameFadeArmed = false;
-                document.body.classList.add('hide-hero-name');
-            }
-        });
+/* ---------- helpers ---------- */
+function splitChars(el) {
+    const text = el.childNodes[0].textContent; // first text node only (underline span stays)
+    el.setAttribute('aria-label', text);
+    const frag = document.createDocumentFragment();
+    [...text].forEach(ch => {
+        const s = document.createElement('span');
+        s.className = 'char';
+        s.textContent = ch === ' ' ? ' ' : ch;
+        frag.appendChild(s);
+    });
+    el.childNodes[0].replaceWith(frag);
+    return el.querySelectorAll('.char');
+}
 
-        function startPlayback() {
-            document.body.classList.add('hero-reveal');   // Hero entrance animations
-            try { video.currentTime = 0; } catch (e) {}
-            const p = video.play();
-            if (p && typeof p.catch === 'function') {
-                p.catch(function() { /* autoplay blocked — Hero is already revealed */ });
-            }
-        }
+/* ---------- background video: play once, freeze on last frame ---------- */
+const video = document.querySelector('.page-bg video');
+video.loop = false;
+video.addEventListener('ended', () => {
+    if (video.duration) video.currentTime = Math.max(0, video.duration - 0.05);
+});
 
-        if (video.readyState >= 2) {
-            startPlayback();
-        } else {
-            video.addEventListener('canplay', startPlayback, { once: true });
-            // Fallback: reveal Hero even if the video is slow to load.
-            setTimeout(function() {
-                if (!document.body.classList.contains('hero-reveal')) {
-                    document.body.classList.add('hero-reveal');
-                }
-            }, 2500);
-        }
+let nameFadeArmed = true;
+video.addEventListener('timeupdate', () => {
+    if (!nameFadeArmed || !video.duration) return;
+    if (video.currentTime >= video.duration - 3) {
+        nameFadeArmed = false;
+        document.body.classList.add('hide-hero-name');
+    }
+});
 
-        // Intersection Observer for scroll-triggered animations
-        const observerOptions = {
-            threshold: 0.2,
-            rootMargin: '0px 0px -100px 0px'
-        };
+/* ---------- hero entrance timeline ---------- */
+const heroTitle = document.querySelector('.hero-title');
+let heroPlayed = false;
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('reveal');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, observerOptions);
+function runHeroTimeline() {
+    if (heroPlayed) return;
+    heroPlayed = true;
 
-        document.querySelectorAll('.section-title, .pillar, .experience-card, .project-card, .metric, .education-item, .contact-email, .contact-links, .footer-text').forEach(el => {
-            observer.observe(el);
-        });
+    if (REDUCED) return; // elements are visible by default now
 
-        // Stagger animations for grid items
-        document.querySelectorAll('.pillars-grid, .experience-grid, .projects-grid, .metrics-grid').forEach(grid => {
-            const items = Array.from(grid.children);
-            items.forEach((item, i) => {
-                const observer = new IntersectionObserver((entries) => {
-                    if (entries[0].isIntersecting) {
-                        setTimeout(() => item.classList.add('reveal'), i * 150);
-                        observer.unobserve(item);
-                    }
-                }, observerOptions);
-                observer.observe(item);
-            });
-        });
+    const titleChars = [];
+    heroTitle.querySelectorAll('span').forEach(word => {
+        titleChars.push(...splitChars(word));
+    });
 
-        // Counter animation for metrics
-        document.querySelectorAll('[data-target]').forEach(el => {
-            const observer = new IntersectionObserver((entries) => {
-                if (entries[0].isIntersecting && !el.dataset.animated) {
-                    el.dataset.animated = 'true';
-                    const target = parseInt(el.dataset.target, 10);
-                    let current = 0;
-                    const duration = 1500;
-                    const increment = target / (duration / 16);
-                    const counter = setInterval(() => {
-                        current += increment;
-                        if (current >= target) {
-                            el.textContent = target.toLocaleString();
-                            clearInterval(counter);
-                        } else {
-                            el.textContent = Math.floor(current).toLocaleString();
-                        }
-                    }, 16);
-                    observer.unobserve(el);
-                }
-            }, observerOptions);
-            observer.observe(el);
-        });
+    utils.set('.hero-image-wrapper', { opacity: 0, scale: 0.9 });
+    utils.set(titleChars, { opacity: 0, translateY: 50 });
+    utils.set('.hero-subtitle, .hero-tagline, .button-group, .scroll-indicator', { opacity: 0, translateY: 24 });
+
+    const tl = createTimeline({ defaults: { ease: 'outExpo', duration: 900 } });
+    tl.add(titleChars, { opacity: 1, translateY: 0, delay: stagger(45), duration: 1100, ease: 'outBack' }, 600)
+      .add('.hero-image-wrapper', { opacity: 1, scale: 1, duration: 1400, ease: 'outElastic(1, .6)' }, 1400)
+      .add('.hero-subtitle', { opacity: 1, translateY: 0 }, '-=900')
+      .add('.hero-tagline', { opacity: 1, translateY: 0 }, '-=700')
+      .add('.button-group', { opacity: 1, translateY: 0 }, '-=700')
+      .add('.scroll-indicator', { opacity: 1, translateY: 0 }, '-=600');
+}
+
+function startPlayback() {
+    runHeroTimeline();
+    try { video.currentTime = 0; } catch (e) {}
+    const p = video.play();
+    if (p && typeof p.catch === 'function') p.catch(() => {});
+}
+
+if (video.readyState >= 2) {
+    startPlayback();
+} else {
+    video.addEventListener('canplay', startPlayback, { once: true });
+    setTimeout(() => { runHeroTimeline(); }, 2500); // fallback if video is slow
+}
