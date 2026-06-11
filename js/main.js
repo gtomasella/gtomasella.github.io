@@ -165,3 +165,34 @@ if (!REDUCED && window.matchMedia('(pointer: fine)').matches) {
         });
     });
 }
+
+/* ---------- custom cursor ---------- */
+if (!REDUCED && window.matchMedia('(pointer: fine)').matches) {
+    const dot = document.querySelector('.cursor-dot');
+    const ring = document.querySelector('.cursor-ring');
+    let mx = -100, my = -100, rx = -100, ry = -100;
+
+    window.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+
+    (function cursorLoop() {
+        rx += (mx - rx) * 0.18;
+        ry += (my - ry) * 0.18;
+        dot.style.transform = `translate(${mx - 3}px, ${my - 3}px)`;
+        ring.style.transform = `translate(${rx - 18}px, ${ry - 18}px)`;
+        requestAnimationFrame(cursorLoop);
+    })();
+
+    document.querySelectorAll('a, .btn, .pillar, .experience-card, .project-card, .metric').forEach(el => {
+        el.addEventListener('mouseenter', () => ring.classList.add('is-hover'));
+        el.addEventListener('mouseleave', () => ring.classList.remove('is-hover'));
+    });
+}
+
+/* ---------- scroll progress bar ---------- */
+const progressBar = document.querySelector('.scroll-progress .bar');
+function updateProgress() {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    progressBar.style.transform = `scaleX(${max > 0 ? window.scrollY / max : 0})`;
+}
+window.addEventListener('scroll', updateProgress, { passive: true });
+updateProgress();
