@@ -123,3 +123,19 @@ if (!REDUCED) {
         onEnter(el, () => animate(el, { opacity: 1, translateY: 0, duration: 800, ease: 'outExpo' }));
     });
 }
+
+/* ---------- metric counters ---------- */
+document.querySelectorAll('[data-target]').forEach(el => {
+    const target = parseInt(el.dataset.target, 10);
+    if (REDUCED) { el.textContent = target.toLocaleString('en-US'); return; }
+    onEnter(el, () => {
+        const counter = { value: 0 };
+        animate(counter, {
+            value: target,
+            duration: 1800,
+            ease: 'outExpo',
+            onUpdate: () => { el.textContent = Math.floor(counter.value).toLocaleString('en-US'); },
+            onComplete: () => { el.textContent = target.toLocaleString('en-US'); }
+        });
+    });
+});
