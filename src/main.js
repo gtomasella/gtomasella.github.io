@@ -85,21 +85,25 @@ if (reduced) {
     if (stageEl && cards.length > 1) {
       stageEl.classList.add('proj-stage--pinned');
       const n = cards.length;
+      let current = 0;
       gsap.set(cards, { autoAlpha: 0 });
       gsap.set(cards[0], { autoAlpha: 1, y: 0 });
       ScrollTrigger.create({
         trigger: '#projects',
         start: 'top top',
-        end: () => `+=${n * window.innerHeight}`,
+        end: () => `+=${(n - 1) * window.innerHeight * 0.6}`,
         pin: true,
-        scrub: 0.6,
-        snap: 1 / (n - 1),
+        scrub: 0.4,
+        snap: { snapTo: 1 / (n - 1), duration: 0.3, ease: 'power1.inOut' },
         onUpdate: (self) => {
-          const pos = self.progress * (n - 1);
-          cards.forEach((c, i) => {
-            const o = Math.max(0, Math.min(1, 1 - Math.abs(pos - i)));
-            gsap.set(c, { autoAlpha: o, y: (i - pos) * 26 });
-          });
+          // Discrete: switch to the next card only when crossing its threshold.
+          const idx = Math.round(self.progress * (n - 1));
+          if (idx !== current) {
+            const dir = idx > current ? 1 : -1;
+            gsap.to(cards[current], { autoAlpha: 0, y: -24 * dir, duration: 0.25 });
+            gsap.fromTo(cards[idx], { autoAlpha: 0, y: 24 * dir }, { autoAlpha: 1, y: 0, duration: 0.3 });
+            current = idx;
+          }
         },
       });
     }
