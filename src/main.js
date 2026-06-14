@@ -122,10 +122,10 @@ if (reduced) {
       const s = stops[step];
       if (s.card !== undefined) {
         const target = topOf('#projects');
-        if (Math.abs(window.scrollY - target) > 8) gsap.to(window, { scrollTo: target, duration: 0.55, ease: 'power2.out' });
+        if (Math.abs(window.scrollY - target) > 8) gsap.to(window, { scrollTo: target, duration: 0.4, ease: 'power2.out' });
         swapCard(s.card);
       } else {
-        gsap.to(window, { scrollTo: topOf(s.sel), duration: 0.6, ease: 'power2.out' });
+        gsap.to(window, { scrollTo: topOf(s.sel), duration: 0.4, ease: 'power2.out' });
       }
     }
 
@@ -144,7 +144,7 @@ if (reduced) {
     const gesture = (dir) => {
       if (lock) return;
       lock = true;
-      setTimeout(() => (lock = false), 620);
+      setTimeout(() => (lock = false), 440);
       move(dir);
     };
 
