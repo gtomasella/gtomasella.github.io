@@ -29,7 +29,7 @@ body {
   background: radial-gradient(120% 90% at 50% 42%, transparent 36%, rgba(2, 4, 9, 0.62) 100%);
 }
 
-#content { position: relative; z-index: 2; }
+#content { position: relative; z-index: 2; pointer-events: none; }
 
 /* ---------- top bar ---------- */
 .topbar {
@@ -97,16 +97,19 @@ body {
 .row__body p { color: var(--text-dim); line-height: 1.55; max-width: 60ch; }
 @media (max-width: 680px) { .row { grid-template-columns: 1fr; gap: 0.6rem; } }
 
-/* projects */
-.cards--proj { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+/* projects (pinned: one card at a time) */
+.proj-stage { margin-top: 2.2rem; display: flex; flex-direction: column; gap: 1.4rem; }
+.proj-stage--pinned { display: block; position: relative; height: 60vh; }
+.proj-stage--pinned .proj { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(620px, 92%); }
 .proj { display: flex; flex-direction: column; gap: 0.6rem; text-decoration: none; color: var(--text);
-  background: var(--glass); border: 1px solid var(--line); border-radius: 16px; padding: 1.8rem; backdrop-filter: blur(8px);
-  transition: border-color 0.25s, transform 0.25s; }
-.proj:hover { border-color: rgba(34, 211, 255, 0.5); transform: translateY(-4px); }
-.proj h3 { font-size: 1.3rem; font-weight: 500; }
-.proj p { color: var(--text-dim); line-height: 1.5; flex: 1; }
+  background: var(--glass); border: 1px solid var(--line); border-radius: 16px; padding: 2rem; backdrop-filter: blur(8px);
+  transition: border-color 0.25s; }
+.proj:hover { border-color: rgba(34, 211, 255, 0.5); }
+.proj__num { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.1em; color: var(--accent); }
+.proj h3 { font-size: 1.5rem; font-weight: 500; }
+.proj p { color: var(--text-dim); line-height: 1.55; }
 .proj__tech { font-family: var(--mono); font-size: 0.78rem; color: var(--text-faint); }
-.proj__link { font-family: var(--mono); font-size: 0.78rem; color: var(--accent); margin-top: 0.4rem; }
+.proj__link { font-family: var(--mono); font-size: 0.8rem; color: var(--accent); margin-top: 0.4rem; }
 
 /* contact */
 .panel--contact { text-align: center; }

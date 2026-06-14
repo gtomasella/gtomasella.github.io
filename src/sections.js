@@ -78,11 +78,12 @@ export function buildSections(content, mount) {
     <section class="panel" id="projects">
       <div class="panel__inner">
         <h2 class="eyebrow" data-reveal>Selected work</h2>
-        <div class="cards cards--proj">
+        <div class="proj-stage">
           ${projects
             .map(
-              (p) => `
-            <a class="proj" href="${p.link}" target="_blank" rel="noopener" data-reveal>
+              (p, i) => `
+            <a class="proj" href="${p.link}" target="_blank" rel="noopener">
+              <span class="proj__num">0${i + 1} / 0${projects.length}</span>
               <h3>${p.title}</h3>
               <p>${p.description}</p>
               <span class="proj__tech">${p.tech}</span>

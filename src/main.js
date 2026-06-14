@@ -78,6 +78,33 @@ if (reduced) {
     gsap.from(el, { y: 32, opacity: 0, duration: 0.9, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 86%' } });
   });
 
+  // Pinned "Selected work": the screen holds and each scroll steps to the next project card.
+  if (!small) {
+    const stageEl = document.querySelector('.proj-stage');
+    const cards = gsap.utils.toArray('.proj-stage .proj');
+    if (stageEl && cards.length > 1) {
+      stageEl.classList.add('proj-stage--pinned');
+      const n = cards.length;
+      gsap.set(cards, { autoAlpha: 0 });
+      gsap.set(cards[0], { autoAlpha: 1, y: 0 });
+      ScrollTrigger.create({
+        trigger: '#projects',
+        start: 'top top',
+        end: () => `+=${n * window.innerHeight}`,
+        pin: true,
+        scrub: 0.6,
+        snap: 1 / (n - 1),
+        onUpdate: (self) => {
+          const pos = self.progress * (n - 1);
+          cards.forEach((c, i) => {
+            const o = Math.max(0, Math.min(1, 1 - Math.abs(pos - i)));
+            gsap.set(c, { autoAlpha: o, y: (i - pos) * 26 });
+          });
+        },
+      });
+    }
+  }
+
   // Hide the scroll cue once the journey begins.
   ScrollTrigger.create({
     start: 'top -8%',
