@@ -1,11 +1,15 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 /**
- * Owns the single renderer, camera and animation loop for the whole site.
- * Stages/systems are added via add() and receive update(time, dt, manager) each frame.
- * Keeping ONE renderer + camera is the key to performance across the scroll journey.
+ * Owns the single renderer, camera, post-processing and animation loop.
+ * Bloom + fog + gradient background + dust give the premium, atmospheric look;
+ * keeping ONE renderer/camera is what makes the (coming) scroll journey perform.
  */
 export class SceneManager {
   constructor(container, { reducedMotion = false } = {}) {
@@ -17,31 +21,40 @@ export class SceneManager {
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    this.renderer.setClearColor(0x060b16, 1);
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.05;
     container.appendChild(this.renderer.domElement);
 
-    // CSS2D layer for crisp DOM labels positioned in 3D space.
     this.labelRenderer = new CSS2DRenderer();
-    Object.assign(this.labelRenderer.domElement.style, {
-      position: 'absolute',
-      top: '0',
-      left: '0',
-      pointerEvents: 'none',
-    });
+    Object.assign(this.labelRenderer.domElement.style, { position: 'absolute', top: '0', left: '0', pointerEvents: 'none' });
     container.appendChild(this.labelRenderer.domElement);
 
     this.scene = new THREE.Scene();
+    this.scene.background = this._gradientBackground();
+    this.scene.fog = new THREE.FogExp2(0x05080f, 0.05);
+
     this.camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
     this.camera.position.set(0, 0, 7.5);
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.controls.enableZoom = false;
-    this.controls.enablePan = false;
-    this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.08;
-    this.controls.rotateSpeed = 0.5;
-    this.controls.autoRotate = !this.reduced;
-    this.controls.autoRotateSpeed = 0.45;
+    Object.assign(this.controls, {
+      enableZoom: false,
+      enablePan: false,
+      enableDamping: true,
+      dampingFactor: 0.08,
+      rotateSpeed: 0.5,
+      autoRotate: !this.reduced,
+      autoRotateSpeed: 0.45,
+    });
+
+    this._addDust();
+
+    // Post-processing: subtle bloom for the signature glow.
+    this.composer = new EffectComposer(this.renderer);
+    this.composer.addPass(new RenderPass(this.scene, this.camera));
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.85, 0.5, 0.0);
+    this.composer.addPass(this.bloom);
+    this.composer.addPass(new OutputPass());
 
     this.renderer.domElement.addEventListener('pointermove', (e) => {
       const r = this.renderer.domElement.getBoundingClientRect();
@@ -54,6 +67,49 @@ export class SceneManager {
     this.renderer.setAnimationLoop(() => this.tick());
   }
 
+  _gradientBackground() {
+    const c = document.createElement('canvas');
+    c.width = 4; c.height = 512;
+    const g = c.getContext('2d');
+    const grad = g.createLinearGradient(0, 0, 0, 512);
+    grad.addColorStop(0, '#0c1530');
+    grad.addColorStop(0.45, '#070d1c');
+    grad.addColorStop(1, '#03060d');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 4, 512);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  _addDust() {
+    const N = 520;
+    const pos = new Float32Array(N * 3);
+    for (let i = 0; i < N; i++) {
+      const r = 6 + Math.random() * 9;
+      const t = Math.random() * Math.PI * 2;
+      const p = Math.acos(2 * Math.random() - 1);
+      pos[i * 3] = r * Math.sin(p) * Math.cos(t);
+      pos[i * 3 + 1] = r * Math.sin(p) * Math.sin(t);
+      pos[i * 3 + 2] = r * Math.cos(p);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    this.dust = new THREE.Points(
+      g,
+      new THREE.PointsMaterial({
+        color: 0x35507a,
+        size: 0.03,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0.55,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      })
+    );
+    this.scene.add(this.dust);
+  }
+
   add(system) {
     this.systems.push(system);
     if (system.object3d) this.scene.add(system.object3d);
@@ -63,6 +119,8 @@ export class SceneManager {
     const w = this.container.clientWidth || window.innerWidth;
     const h = this.container.clientHeight || window.innerHeight;
     this.renderer.setSize(w, h);
+    this.composer.setSize(w, h);
+    this.bloom.setSize(w, h);
     this.labelRenderer.setSize(w, h);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
@@ -72,8 +130,9 @@ export class SceneManager {
     const dt = this.clock.getDelta();
     const t = this.clock.elapsedTime;
     this.controls.update();
+    if (this.dust && !this.reduced) this.dust.rotation.y += dt * 0.01;
     for (const s of this.systems) s.update?.(t, dt, this);
-    this.renderer.render(this.scene, this.camera);
+    this.composer.render();
     this.labelRenderer.render(this.scene, this.camera);
   }
 }

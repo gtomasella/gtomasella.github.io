@@ -10,7 +10,7 @@
     "techLead": { "label": "Tech Lead", "disciplines": ["Data Engineering", "AI"] }
   },
   "graph": {
-    "categories": { "manager": "#00d4ff", "techlead": "#3a86ff", "ai": "#ff6b35" },
+    "categories": { "manager": "#22d3ff", "techlead": "#3a86ff", "ai": "#ff6b35" },
     "nodes": [
       { "label": "Data Governance", "cat": "manager", "hub": true },
       { "label": "Data Quality", "cat": "manager", "hub": true },

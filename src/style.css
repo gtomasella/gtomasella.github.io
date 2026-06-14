@@ -1,9 +1,9 @@
 :root {
-  --bg: #060b16;
-  --text: #e8ecf2;
-  --text-dim: #9aa4b2;
-  --text-faint: #6b7585;
-  --accent: #00d4ff;
+  --bg: #05080f;
+  --text: #eef2f8;
+  --text-dim: #9aa6ba;
+  --text-faint: #5d6b82;
+  --accent: #22d3ff;
   --accent-2: #ff6b35;
   --font: 'Space Grotesk', system-ui, sans-serif;
   --mono: 'JetBrains Mono', ui-monospace, monospace;
@@ -18,63 +18,154 @@ body {
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
 }
+@media (hover: hover) { body { cursor: none; } }
 
-/* WebGL stage fills the viewport, behind the content */
 #webgl { position: fixed; inset: 0; z-index: 0; }
 #webgl canvas { display: block; }
 
-/* DOM content sits above the canvas but lets pointer events through to it */
+/* Atmospheric vignette over the canvas */
+.vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 42%, transparent 38%, rgba(2, 4, 9, 0.6) 100%);
+}
+
+/* Content overlay lets pointer events fall through to the canvas */
 #overlay { position: relative; z-index: 2; pointer-events: none; }
 
+/* ---------- top bar ---------- */
+.topbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.6rem clamp(1.5rem, 5vw, 4rem);
+  pointer-events: none;
+}
+.topbar a { pointer-events: auto; text-decoration: none; }
+.brand {
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  width: 38px; height: 38px;
+  display: grid; place-items: center;
+  border-radius: 10px;
+  transition: border-color 0.25s, color 0.25s;
+}
+.brand:hover { border-color: var(--accent); color: var(--accent); }
+.nav { display: flex; gap: 2rem; }
+.nav a {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  transition: color 0.2s;
+}
+.nav a:hover { color: var(--text); }
+.topbar__cta {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #04222b;
+  background: var(--accent);
+  padding: 0.6rem 1.1rem;
+  border-radius: 999px;
+  transition: transform 0.2s;
+}
+.topbar__cta:hover { transform: translateY(-1px); }
+@media (max-width: 680px) { .nav { display: none; } }
+
+/* ---------- hero ---------- */
 .hero {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 0 8vw;
-  max-width: 1400px;
+  padding: 0 clamp(1.5rem, 8vw, 7rem);
+  max-width: 1500px;
 }
 .hero__kicker {
   font-family: var(--mono);
-  font-size: 0.8rem;
-  letter-spacing: 0.16em;
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+.hero__kicker::before {
+  content: '';
+  width: 42px; height: 1px;
+  background: linear-gradient(90deg, var(--accent), transparent);
 }
 .hero__name {
-  font-size: clamp(2.5rem, 7vw, 5rem);
+  font-size: clamp(3rem, 9.5vw, 8rem);
   font-weight: 500;
-  line-height: 1.04;
-  margin-top: 0.6rem;
+  line-height: 0.96;
+  letter-spacing: -0.03em;
+  margin-top: 1.4rem;
 }
 .hero__tagline {
-  font-size: clamp(1rem, 1.6vw, 1.35rem);
-  line-height: 1.5;
+  font-size: clamp(1.05rem, 1.7vw, 1.5rem);
+  line-height: 1.45;
   color: var(--text-dim);
-  max-width: 32ch;
-  margin-top: 1.2rem;
-}
-.hero__hint {
-  font-family: var(--mono);
-  font-size: 0.75rem;
-  color: var(--text-faint);
-  margin-top: 2.2rem;
+  max-width: 34ch;
+  margin-top: 1.8rem;
 }
 
-/* Graph node labels rendered via CSS2DRenderer */
+/* ---------- scroll cue ---------- */
+.scrollcue {
+  position: fixed;
+  left: 50%; bottom: 2rem;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  pointer-events: none;
+}
+.scrollcue__line { width: 1px; height: 46px; background: linear-gradient(var(--text-faint), transparent); position: relative; overflow: hidden; }
+.scrollcue__line::after { content: ''; position: absolute; top: -50%; left: 0; width: 1px; height: 50%; background: var(--accent); animation: cue 2s ease-in-out infinite; }
+@keyframes cue { 0% { top: -50%; } 100% { top: 120%; } }
+
+/* ---------- graph node labels (CSS2D) ---------- */
 .kg-label {
   font-family: var(--mono);
   font-size: 11px;
+  letter-spacing: 0.02em;
   color: var(--text-dim);
   white-space: nowrap;
-  transform: translate(10px, -50%);
+  transform: translate(12px, -50%);
   pointer-events: none;
-  text-shadow: 0 0 8px rgba(6, 11, 22, 0.9), 0 0 2px rgba(6, 11, 22, 0.9);
+  text-shadow: 0 0 10px rgba(5, 8, 15, 0.95), 0 0 3px rgba(5, 8, 15, 0.95);
   transition: color 0.2s ease;
 }
 .kg-label--hub { color: var(--text); }
 .kg-label--hover { color: var(--accent); }
 
+/* ---------- custom cursor ---------- */
+.cursor, .cursor-ring { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 50; border-radius: 50%; will-change: transform; }
+.cursor { width: 7px; height: 7px; background: var(--accent); }
+.cursor-ring { width: 34px; height: 34px; border: 1.5px solid rgba(34, 211, 255, 0.4); transition: width 0.25s, height 0.25s, border-color 0.25s; }
+.cursor-ring.is-hover { width: 54px; height: 54px; border-color: var(--accent-2); }
+@media (hover: none) { .cursor, .cursor-ring { display: none; } }
+
 @media (prefers-reduced-motion: reduce) {
-  .hero__hint { display: none; }
+  .scrollcue__line::after { animation: none; }
 }

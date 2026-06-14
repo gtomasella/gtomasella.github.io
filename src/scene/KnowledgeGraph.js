@@ -8,6 +8,7 @@ const VERT = /* glsl */ `
   uniform float uTime;
   uniform float uPixelRatio;
   varying vec3 vColor;
+  varying float vFade;
   void main() {
     vColor = aColor;
     vec3 p = position;
@@ -16,20 +17,24 @@ const VERT = /* glsl */ `
     p.y += cos(uTime * 0.45 + ph * 1.3) * 0.05;
     p.z += sin(uTime * 0.40 + ph * 0.7) * 0.05;
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
-    gl_PointSize = aSize * uPixelRatio * (9.0 / -mv.z);
+    float depth = -mv.z;
+    vFade = smoothstep(13.0, 4.0, depth);
+    gl_PointSize = aSize * uPixelRatio * (9.0 / depth);
     gl_Position = projectionMatrix * mv;
   }
 `;
 
 const FRAG = /* glsl */ `
+  uniform float uOpacity;
   varying vec3 vColor;
+  varying float vFade;
   void main() {
     float d = length(gl_PointCoord - 0.5);
     if (d > 0.5) discard;
     float alpha = smoothstep(0.5, 0.0, d);
     float core = smoothstep(0.5, 0.12, d);
-    vec3 col = vColor * (0.55 + 0.9 * core);
-    gl_FragColor = vec4(col, alpha);
+    vec3 col = vColor * (0.5 + 1.0 * core);
+    gl_FragColor = vec4(col, alpha * mix(0.25, 1.0, vFade) * uOpacity);
   }
 `;
 
@@ -37,6 +42,7 @@ const FRAG = /* glsl */ `
  * Hero stage: an interactive force-laid-out knowledge graph built from content.graph.
  * Nodes = GPU points (soft additive glow), edges = additive line segments,
  * labels = CSS2D DOM. Hover highlights a node + its edges; OrbitControls drives rotation.
+ * uOpacity drives the intro reveal.
  */
 export class KnowledgeGraph {
   constructor(graphData) {
@@ -95,6 +101,7 @@ export class KnowledgeGraph {
       uniforms: {
         uTime: { value: 0 },
         uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+        uOpacity: { value: 1 },
       },
       vertexShader: VERT,
       fragmentShader: FRAG,
@@ -132,8 +139,8 @@ export class KnowledgeGraph {
       const pa = this.basePos[a];
       const pb = this.basePos[b];
       ePos.set([pa.x, pa.y, pa.z, pb.x, pb.y, pb.z], e * 6);
-      ca.set(palette[source[a].cat] || '#9fb4ff').multiplyScalar(0.45);
-      cb.set(palette[source[b].cat] || '#9fb4ff').multiplyScalar(0.45);
+      ca.set(palette[source[a].cat] || '#9fb4ff').multiplyScalar(0.5);
+      cb.set(palette[source[b].cat] || '#9fb4ff').multiplyScalar(0.5);
       eCol.set([ca.r, ca.g, ca.b, cb.r, cb.g, cb.b], e * 6);
     }
     this.edgeBaseColors = eCol.slice();
@@ -176,7 +183,7 @@ export class KnowledgeGraph {
       for (let k = 0; k < 2; k++) {
         const idx = (e * 2 + k) * 3;
         if (on) {
-          c[idx] = 0.0;
+          c[idx] = 0.13;
           c[idx + 1] = 0.83;
           c[idx + 2] = 1.0;
         } else {
@@ -210,7 +217,7 @@ export class KnowledgeGraph {
       const behind = v.z > 1;
       if (n._label) {
         const front = THREE.MathUtils.clamp(1 - (v.z * 0.5 + 0.5), 0, 1);
-        n._label.el.style.opacity = (0.22 + 0.62 * front).toFixed(2);
+        n._label.el.style.opacity = (0.18 + 0.64 * front).toFixed(2);
       }
       if (!behind) {
         const d = Math.hypot(v.x - p.x, v.y - p.y);
