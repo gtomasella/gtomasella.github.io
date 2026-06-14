@@ -49,9 +49,12 @@ if (reduced) {
     scrub: 1,
     onUpdate: (self) => {
       const p = self.progress;
-      if (p < 0.5) field.setSegment(SHAPE.DISPERSED, SHAPE.NEURAL, p / 0.5);
-      else field.setSegment(SHAPE.NEURAL, SHAPE.GT, (p - 0.5) / 0.5);
-      field.labelStrength = smooth(0.12, 0.4, p); // appear as the network forms, peak through neural
+      if (p < 0.34) field.setSegment(SHAPE.DISPERSED, SHAPE.NEURAL, p / 0.34); // scatter -> network
+      else if (p < 0.66) field.setSegment(SHAPE.NEURAL, SHAPE.NEURAL, 0); // hold: explore the network + labels
+      else field.setSegment(SHAPE.NEURAL, SHAPE.GT, (p - 0.66) / 0.34); // network -> GT hero
+      const formed = smooth(0.16, 0.32, p); // labels appear as the network forms
+      const toGT = smooth(0.7, 0.96, p); // and recede as GT takes over
+      field.labelStrength = formed * (1 - 0.7 * toGT);
     },
     onLeave: () => gsap.to(field, { labelStrength: 0.3, duration: 0.6 }), // secondary from the hero on
     onEnterBack: () => gsap.killTweensOf(field, 'labelStrength'),

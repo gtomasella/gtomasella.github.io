@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
-import { dispersedCloud, fibonacciSphere, sampleText } from './shapes.js';
+import { dispersedCloud, sampleText } from './shapes.js';
 
 const VERT = /* glsl */ `
   attribute float aSize;
@@ -15,9 +15,9 @@ const VERT = /* glsl */ `
     vColor = aColor;
     vec3 p = position;
     float ph = aSeed * 6.2831853;
-    p.x += sin(uTime * 0.45 + ph) * 0.045 * uMotion;
-    p.y += cos(uTime * 0.40 + ph * 1.3) * 0.045 * uMotion;
-    p.z += sin(uTime * 0.35 + ph * 0.7) * 0.045 * uMotion;
+    p.x += sin(uTime * 0.45 + ph) * 0.04 * uMotion;
+    p.y += cos(uTime * 0.40 + ph * 1.3) * 0.04 * uMotion;
+    p.z += sin(uTime * 0.35 + ph * 0.7) * 0.04 * uMotion;
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     float depth = -mv.z;
     vFade = smoothstep(15.0, 4.0, depth);
@@ -44,11 +44,12 @@ const FRAG = /* glsl */ `
  * The persistent point field for the whole journey.
  * Morph targets (this.shapes), in order:
  *   0 DISPERSED  — scattered opening cloud (no labels)
- *   1 NEURAL     — organised network sphere (labels are the protagonist here)
+ *   1 NEURAL     — a layered NEURAL NETWORK: nodes in columns, connections made of particles.
+ *                  This is the protagonist: labels are spread across the network and highlight on hover.
  *   2 GT         — the hero image, "GT"
  *   3 BUILD      — "LET'S BUILD" payoff
- * The first NH points are labelled concept hubs (your disciplines), connected by edges.
- * `labelStrength` (0..1) drives how prominent labels + edges are, and whether hover works.
+ * The labelled concept hubs are placed at network NODES (one per layer position), so their
+ * labels are distributed across the whole structure — not clustered in one spot.
  */
 export class NeuralField {
   constructor(graphData, { count = 1900, reducedMotion = false } = {}) {
@@ -67,10 +68,20 @@ export class NeuralField {
     const palette = data.categories;
     const cats = ['manager', 'techlead', 'ai'];
     const N = this.count;
+    const NH = this.NH;
 
+    // Hub particle indices spread evenly across the array (so hubs are distributed in EVERY shape).
+    this.hubIndices = [];
+    for (let i = 0; i < NH; i++) this.hubIndices.push(Math.min(N - 1, Math.floor((i + 0.5) * (N / NH))));
+    const hubSet = new Set(this.hubIndices);
+    const hubOf = {};
+    this.hubIndices.forEach((pi, i) => (hubOf[pi] = i));
+
+    // Morph targets. NEURAL is built with knowledge of the hub indices so hubs land on nodes.
+    const neural = this._buildNeural(N, NH, hubSet);
     this.shapes = [
       dispersedCloud(N, 7),
-      fibonacciSphere(N, 3),
+      neural,
       sampleText('GT', N, { fontSize: 280 }),
       sampleText("LET'S BUILD", N, { fontSize: 150 }),
     ];
@@ -80,16 +91,16 @@ export class NeuralField {
     const sizes = new Float32Array(N);
     const seeds = new Float32Array(N);
     const c = new THREE.Color();
-    for (let i = 0; i < N; i++) {
-      const isHub = i < this.NH;
-      const cat = isHub ? this.nodes[i].cat : cats[i % 3];
+    for (let p = 0; p < N; p++) {
+      const isHub = hubSet.has(p);
+      const cat = isHub ? this.nodes[hubOf[p]].cat : cats[p % 3];
       c.set(palette[cat] || '#9fb4ff');
       if (!isHub) c.multiplyScalar(0.85);
-      colors[i * 3] = c.r;
-      colors[i * 3 + 1] = c.g;
-      colors[i * 3 + 2] = c.b;
-      sizes[i] = isHub ? 22 : 6.5;
-      seeds[i] = Math.random();
+      colors[p * 3] = c.r;
+      colors[p * 3 + 1] = c.g;
+      colors[p * 3 + 2] = c.b;
+      sizes[p] = isHub ? 26 : 6.5;
+      seeds[p] = Math.random();
     }
     this.sizesBase = sizes.slice();
 
@@ -115,23 +126,7 @@ export class NeuralField {
     this.points = new THREE.Points(pg, this.material);
     this.object3d.add(this.points);
 
-    // Edges among hubs (kNN on the NEURAL layout — that's where they're showcased).
-    const neural = this.shapes[1];
-    const hubPos = [];
-    for (let i = 0; i < this.NH; i++) hubPos.push(new THREE.Vector3(neural[i * 3], neural[i * 3 + 1], neural[i * 3 + 2]));
-    const seen = new Set();
-    this.edges = [];
-    for (let i = 0; i < this.NH; i++) {
-      const d = [];
-      for (let j = 0; j < this.NH; j++) if (j !== i) d.push([hubPos[i].distanceToSquared(hubPos[j]), j]);
-      d.sort((a, b) => a[0] - b[0]);
-      const k = this.nodes[i].hub ? 3 : 2;
-      for (let m = 0; m < k; m++) {
-        const j = d[m][1];
-        const key = i < j ? `${i}-${j}` : `${j}-${i}`;
-        if (!seen.has(key)) { seen.add(key); this.edges.push([i, j]); }
-      }
-    }
+    // Edges (hub index pairs) come from the network layer structure, built in _buildNeural.
     const E = this.edges.length;
     this.edgePos = new Float32Array(E * 2 * 3);
     const eCol = new Float32Array(E * 2 * 3);
@@ -139,8 +134,8 @@ export class NeuralField {
     const cb = new THREE.Color();
     for (let e = 0; e < E; e++) {
       const [a, b] = this.edges[e];
-      ca.set(palette[this.nodes[a].cat] || '#9fb4ff').multiplyScalar(0.5);
-      cb.set(palette[this.nodes[b].cat] || '#9fb4ff').multiplyScalar(0.5);
+      ca.set(palette[this.nodes[a].cat] || '#9fb4ff').multiplyScalar(0.55);
+      cb.set(palette[this.nodes[b].cat] || '#9fb4ff').multiplyScalar(0.55);
       eCol.set([ca.r, ca.g, ca.b, cb.r, cb.g, cb.b], e * 6);
     }
     this.edgeBaseColors = eCol.slice();
@@ -155,9 +150,9 @@ export class NeuralField {
     );
     this.object3d.add(this.lines);
 
-    // CSS2D labels for the hubs.
+    // One CSS2D label per concept hub.
     this.labels = [];
-    for (let i = 0; i < this.NH; i++) {
+    for (let i = 0; i < NH; i++) {
       const el = document.createElement('div');
       el.className = 'kg-label' + (this.nodes[i].hub ? ' kg-label--hub' : '');
       el.textContent = this.nodes[i].label;
@@ -167,7 +162,63 @@ export class NeuralField {
     }
   }
 
-  // Blend point positions between two named shape indices (t in 0..1).
+  // Build the layered neural-network target: node columns + particle connection strands.
+  // Hubs (concept i) sit on node anchor i, so labels spread across all layers.
+  _buildNeural(N, NH, hubSet) {
+    const layerSizes = [4, 6, 5, 3];
+    const xs = [-2.9, -0.97, 0.97, 2.9];
+    const anchors = [];
+    const layerAnchors = [];
+    for (let li = 0; li < layerSizes.length; li++) {
+      const n = layerSizes[li];
+      const arr = [];
+      for (let k = 0; k < n; k++) {
+        const y = n === 1 ? 0 : (k / (n - 1) - 0.5) * 4.4;
+        arr.push(anchors.length);
+        anchors.push({ x: xs[li], y, z: (Math.random() - 0.5) * 0.5 });
+      }
+      layerAnchors.push(arr);
+    }
+
+    // Connections between consecutive layers (each node to its 2 nearest in the next layer).
+    const anchorEdges = [];
+    for (let li = 0; li < layerAnchors.length - 1; li++) {
+      for (const a of layerAnchors[li]) {
+        const next = layerAnchors[li + 1]
+          .map((b) => [Math.abs(anchors[a].y - anchors[b].y), b])
+          .sort((u, v) => u[0] - v[0]);
+        for (let m = 0; m < Math.min(2, next.length); m++) anchorEdges.push([a, next[m][1]]);
+      }
+    }
+    // Drawn hub edges = anchor edges whose endpoints are both hubs (hub i == anchor i).
+    this.edges = anchorEdges.filter(([a, b]) => a < NH && b < NH);
+
+    const out = new Float32Array(N * 3);
+    const place = (idx, a, j) => {
+      out[idx * 3] = a.x + (Math.random() - 0.5) * j;
+      out[idx * 3 + 1] = a.y + (Math.random() - 0.5) * j;
+      out[idx * 3 + 2] = a.z + (Math.random() - 0.5) * j;
+    };
+    // Hub particles sit exactly on their node anchor.
+    for (let i = 0; i < NH; i++) place(this.hubIndices[i], anchors[i % anchors.length], 0.14);
+    // Filler particles: half cluster at nodes, half ride along connections (the "wires").
+    for (let p = 0; p < N; p++) {
+      if (hubSet.has(p)) continue;
+      if (Math.random() < 0.5) {
+        place(p, anchors[(Math.random() * anchors.length) | 0], 0.32);
+      } else {
+        const e = anchorEdges[(Math.random() * anchorEdges.length) | 0];
+        const A = anchors[e[0]];
+        const B = anchors[e[1]];
+        const t = Math.random();
+        out[p * 3] = A.x + (B.x - A.x) * t + (Math.random() - 0.5) * 0.12;
+        out[p * 3 + 1] = A.y + (B.y - A.y) * t + (Math.random() - 0.5) * 0.12;
+        out[p * 3 + 2] = A.z + (B.z - A.z) * t + (Math.random() - 0.5) * 0.12;
+      }
+    }
+    return out;
+  }
+
   setSegment(a, b, t) {
     t = Math.min(Math.max(t, 0), 1);
     const A = this.shapes[a];
@@ -195,7 +246,10 @@ export class NeuralField {
     }
     this.lineGeo.attributes.color.needsUpdate = true;
     const s = this.pointGeo.attributes.aSize.array;
-    for (let i = 0; i < this.NH; i++) s[i] = i === this.hovered ? this.sizesBase[i] * 1.8 : this.sizesBase[i];
+    for (let i = 0; i < this.NH; i++) {
+      const pi = this.hubIndices[i];
+      s[pi] = i === this.hovered ? this.sizesBase[pi] * 1.9 : this.sizesBase[pi];
+    }
     this.pointGeo.attributes.aSize.needsUpdate = true;
     for (let i = 0; i < this.NH; i++) this.labels[i].el.classList.toggle('kg-label--hover', i === this.hovered);
   }
@@ -209,15 +263,16 @@ export class NeuralField {
     const vis = this.labelStrength * this.introFactor;
     const canHover = this.labelStrength > 0.4;
 
-    let best = 0.06;
+    let best = 0.08;
     let hi = -1;
     for (let i = 0; i < this.NH; i++) {
-      const x = pos[i * 3], y = pos[i * 3 + 1], z = pos[i * 3 + 2];
+      const pi = this.hubIndices[i];
+      const x = pos[pi * 3], y = pos[pi * 3 + 1], z = pos[pi * 3 + 2];
       const lab = this.labels[i];
       lab.obj.position.set(x, y, z);
       const v = this._proj.set(x, y, z).project(cam);
       const front = THREE.MathUtils.clamp(1 - (v.z * 0.5 + 0.5), 0, 1);
-      lab.el.style.opacity = (vis * (0.3 + 0.6 * front)).toFixed(3);
+      lab.el.style.opacity = (vis * (0.5 + 0.5 * front)).toFixed(3);
       if (canHover && v.z <= 1) {
         const d = Math.hypot(v.x - mgr.pointer.x, v.y - mgr.pointer.y);
         if (d < best) { best = d; hi = i; }
@@ -229,7 +284,9 @@ export class NeuralField {
     const ep = this.edgePos;
     for (let e = 0; e < this.edges.length; e++) {
       const [a, b] = this.edges[e];
-      ep.set([pos[a * 3], pos[a * 3 + 1], pos[a * 3 + 2], pos[b * 3], pos[b * 3 + 1], pos[b * 3 + 2]], e * 6);
+      const pa = this.hubIndices[a];
+      const pb = this.hubIndices[b];
+      ep.set([pos[pa * 3], pos[pa * 3 + 1], pos[pa * 3 + 2], pos[pb * 3], pos[pb * 3 + 1], pos[pb * 3 + 2]], e * 6);
     }
     this.lineGeo.attributes.position.needsUpdate = true;
     this.lines.material.opacity = 0.6 * vis;
