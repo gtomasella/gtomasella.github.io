@@ -17,6 +17,8 @@ export class SceneManager {
     this.reduced = reducedMotion;
     this.systems = [];
     this.pointer = new THREE.Vector2(-10, -10);
+    this._tx = 0;
+    this._ty = 0;
     this.clock = new THREE.Clock();
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -132,6 +134,14 @@ export class SceneManager {
     const dt = this.clock.getDelta();
     const t = this.clock.elapsedTime;
     this.controls.update();
+    if (!this.reduced) {
+      // Lusion-style parallax: steer the camera slightly toward the pointer.
+      this._tx += (this.pointer.x - this._tx) * 0.06;
+      this._ty += (this.pointer.y - this._ty) * 0.06;
+      this.camera.position.x += this._tx * 0.7;
+      this.camera.position.y += this._ty * 0.7;
+      this.camera.lookAt(0, 0, 0);
+    }
     if (this.dust && !this.reduced) this.dust.rotation.y += dt * 0.01;
     for (const s of this.systems) s.update?.(t, dt, this);
     this.composer.render();

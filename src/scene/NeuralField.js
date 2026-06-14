@@ -10,18 +10,24 @@ const VERT = /* glsl */ `
   uniform float uMotion;
   varying vec3 vColor;
   varying float vFade;
-  // Continuous "Aurora" colour flow — swap these three colours to change the palette.
-  vec3 auroraFlow(float t) {
-    vec3 cA = vec3(0.13, 0.83, 1.0);  // cyan  #22d3ff
-    vec3 cB = vec3(0.49, 0.36, 1.0);  // violet #7c5cff
-    vec3 cC = vec3(1.0, 0.30, 0.62);  // magenta #ff4d9d
-    float seg = fract(t) * 3.0;
-    if (seg < 1.0) return mix(cA, cB, seg);
-    if (seg < 2.0) return mix(cB, cC, seg - 1.0);
-    return mix(cC, cA, seg - 2.0);
+  // Continuous colour flow that also CYCLES between palettes over time.
+  // ph = per-particle flow phase, pt = slow palette-cycle phase.
+  vec3 paletteFlow(float ph, float pt) {
+    vec3 A0 = vec3(0.13, 0.83, 1.0);  vec3 A1 = vec3(0.49, 0.36, 1.0);  vec3 A2 = vec3(1.0, 0.30, 0.62); // Aurora
+    vec3 B0 = vec3(0.0, 0.95, 0.75);  vec3 B1 = vec3(0.20, 0.55, 1.0);  vec3 B2 = vec3(1.0, 0.82, 0.25); // Plasma
+    vec3 C0 = vec3(1.0, 0.18, 0.59);  vec3 C1 = vec3(0.55, 0.23, 0.93); vec3 C2 = vec3(0.16, 0.83, 1.0); // Synthwave
+    float k = fract(pt) * 3.0;
+    vec3 c0, c1, c2;
+    if (k < 1.0)      { float f = k;        c0 = mix(A0, B0, f); c1 = mix(A1, B1, f); c2 = mix(A2, B2, f); }
+    else if (k < 2.0) { float f = k - 1.0;  c0 = mix(B0, C0, f); c1 = mix(B1, C1, f); c2 = mix(B2, C2, f); }
+    else              { float f = k - 2.0;  c0 = mix(C0, A0, f); c1 = mix(C1, A1, f); c2 = mix(C2, A2, f); }
+    float seg = fract(ph) * 3.0;
+    if (seg < 1.0) return mix(c0, c1, seg);
+    if (seg < 2.0) return mix(c1, c2, seg - 1.0);
+    return mix(c2, c0, seg - 2.0);
   }
   void main() {
-    vColor = auroraFlow(aSeed * 0.7 + uTime * 0.05 * uMotion);
+    vColor = paletteFlow(aSeed * 0.7 + uTime * 0.05 * uMotion, uTime * 0.02 * uMotion);
     vec3 p = position;
     float ph = aSeed * 6.2831853;
     p.x += sin(uTime * 0.45 + ph) * 0.04 * uMotion;
