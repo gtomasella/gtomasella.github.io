@@ -1,0 +1,80 @@
+:root {
+  --bg: #060b16;
+  --text: #e8ecf2;
+  --text-dim: #9aa4b2;
+  --text-faint: #6b7585;
+  --accent: #00d4ff;
+  --accent-2: #ff6b35;
+  --font: 'Space Grotesk', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* WebGL stage fills the viewport, behind the content */
+#webgl { position: fixed; inset: 0; z-index: 0; }
+#webgl canvas { display: block; }
+
+/* DOM content sits above the canvas but lets pointer events through to it */
+#overlay { position: relative; z-index: 2; pointer-events: none; }
+
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 8vw;
+  max-width: 1400px;
+}
+.hero__kicker {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.hero__name {
+  font-size: clamp(2.5rem, 7vw, 5rem);
+  font-weight: 500;
+  line-height: 1.04;
+  margin-top: 0.6rem;
+}
+.hero__tagline {
+  font-size: clamp(1rem, 1.6vw, 1.35rem);
+  line-height: 1.5;
+  color: var(--text-dim);
+  max-width: 32ch;
+  margin-top: 1.2rem;
+}
+.hero__hint {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text-faint);
+  margin-top: 2.2rem;
+}
+
+/* Graph node labels rendered via CSS2DRenderer */
+.kg-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  transform: translate(10px, -50%);
+  pointer-events: none;
+  text-shadow: 0 0 8px rgba(6, 11, 22, 0.9), 0 0 2px rgba(6, 11, 22, 0.9);
+  transition: color 0.2s ease;
+}
+.kg-label--hub { color: var(--text); }
+.kg-label--hover { color: var(--accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__hint { display: none; }
+}

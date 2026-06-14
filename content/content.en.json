@@ -1,0 +1,92 @@
+{
+  "identity": {
+    "name": "Guido Tomasella",
+    "kicker": "Data governance · Data engineering · AI leadership",
+    "roles": ["Data Manager", "Tech Lead"],
+    "tagline": "I lead data quality, governance and engineering — and amplify all of it with AI and agents."
+  },
+  "hats": {
+    "manager": { "label": "Manager", "disciplines": ["Data", "Data Quality", "Data Governance"] },
+    "techLead": { "label": "Tech Lead", "disciplines": ["Data Engineering", "AI"] }
+  },
+  "graph": {
+    "categories": { "manager": "#00d4ff", "techlead": "#3a86ff", "ai": "#ff6b35" },
+    "nodes": [
+      { "label": "Data Governance", "cat": "manager", "hub": true },
+      { "label": "Data Quality", "cat": "manager", "hub": true },
+      { "label": "Data", "cat": "manager" },
+      { "label": "DataHub", "cat": "manager" },
+      { "label": "Lineage", "cat": "manager" },
+      { "label": "Data Contracts", "cat": "manager" },
+      { "label": "Data Engineering", "cat": "techlead", "hub": true },
+      { "label": "Pipelines", "cat": "techlead" },
+      { "label": "PySpark", "cat": "techlead" },
+      { "label": "BigQuery", "cat": "techlead" },
+      { "label": "Observability", "cat": "techlead" },
+      { "label": "AI", "cat": "ai", "hub": true },
+      { "label": "Agents", "cat": "ai", "hub": true },
+      { "label": "MCP", "cat": "ai" },
+      { "label": "RAG", "cat": "ai" },
+      { "label": "LLMs", "cat": "ai" },
+      { "label": "Knowledge Graph", "cat": "ai" }
+    ]
+  },
+  "amplifier": [
+    { "branch": "Data Governance", "message": "Governance that scales because agents consume a living knowledge graph." },
+    { "branch": "Data Quality", "message": "Quality shifts from reactive to proactive with AI-assisted observability." },
+    { "branch": "Data Engineering", "message": "Engineering accelerates with copilots and autonomous documentation." },
+    { "branch": "AI", "message": "AI in production, responsibly — agents that audit, document and plan." }
+  ],
+  "experience": [
+    {
+      "company": "Scanntech",
+      "role": "Data Quality & Governance Manager (CDAO)",
+      "dates": "2024 — present",
+      "summary": "Founded and led a federated data governance practice across LatAm, turning governance into a business enabler powered by agents."
+    },
+    {
+      "company": "Telecom Argentina",
+      "role": "Data Governance Team Leader & Tech Lead",
+      "dates": "2021 — 2024",
+      "summary": "Architected the data platform and the first formal governance layer over a multi-terabyte estate."
+    },
+    {
+      "company": "Telecom Argentina",
+      "role": "Team Leader — Headend",
+      "dates": "2019 — 2021",
+      "summary": "Led the shift to a data-centric operating model for the video datacenter."
+    }
+  ],
+  "projects": [
+    {
+      "title": "Project title",
+      "description": "Short description of what it does and the problem it solves.",
+      "tech": "Tech, stack",
+      "link": "https://github.com/guido-tomasella",
+      "placeholder": true
+    },
+    {
+      "title": "Project title",
+      "description": "Short description of what it does and the problem it solves.",
+      "tech": "Tech, stack",
+      "link": "https://github.com/guido-tomasella",
+      "placeholder": true
+    },
+    {
+      "title": "Project title",
+      "description": "Short description of what it does and the problem it solves.",
+      "tech": "Tech, stack",
+      "link": "https://github.com/guido-tomasella",
+      "placeholder": true
+    }
+  ],
+  "contact": {
+    "headline": "Let's build",
+    "email": "tomasellaguido@hotmail.com",
+    "links": [
+      { "label": "LinkedIn", "url": "https://linkedin.com/in/guido-tomasella-06222885" },
+      { "label": "GitHub", "url": "https://github.com/guido-tomasella" },
+      { "label": "CV", "url": "cv.pdf" }
+    ]
+  }
+}

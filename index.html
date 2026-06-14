@@ -1,234 +1,34 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guido Tomasella — Data Governance & AI Leadership</title>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/v2.css">
-</head>
-<body>
-    <div class="scroll-progress"><div class="bar"></div></div>
-    <div class="cursor-dot"></div>
-    <div class="cursor-ring"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guido Tomasella — Data Manager &amp; Tech Lead</title>
+    <meta
+      name="description"
+      content="Data Manager & Tech Lead. I lead data quality, governance and engineering — and amplify all of it with AI and agents."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- WebGL stage (single canvas for the whole journey) -->
+    <div id="webgl"></div>
 
-    <!-- BACKGROUND VIDEO -->
-    <div class="page-bg">
-        <video muted="" playsinline="" preload="auto">
-            <source src="uploads/Video Project 5.mp4" type="video/mp4">
-        </video>
-    </div>
+    <!-- DOM content overlays the canvas; populated from content/content.en.json -->
+    <main id="overlay">
+      <section class="hero" id="hero">
+        <p class="hero__kicker" data-anim></p>
+        <h1 class="hero__name" data-anim></h1>
+        <p class="hero__tagline" data-anim></p>
+        <p class="hero__hint" data-anim>Drag to explore · hover the nodes</p>
+      </section>
+    </main>
 
-    <!-- HERO SECTION -->
-    <section class="hero">
-        <div class="hero-content">
-            <div class="hero-image-wrapper">
-                <img src="uploads/Gemini_Generated_Image_3yom3j3yom3j3yom.png" alt="Guido Tomasella" class="hero-image">
-            </div>
-            <h1 class="hero-title">
-                <span style="animation-delay: 0s;">Guido</span>
-                <span style="animation-delay: 0.15s;">Tomasella</span>
-            </h1>
-            <p class="hero-subtitle">Data Governance • Data Engineering • AI Leadership</p>
-            <p class="hero-tagline">Building the data foundation that makes AI actually work in production</p>
-            <div class="button-group">
-                <a href="#contact" class="btn btn-primary">Get in Touch</a>
-                <a href="https://github.com/guido-tomasella" class="btn" target="_blank">GitHub</a>
-                <a href="https://linkedin.com/in/guido-tomasella-06222885" class="btn" target="_blank">LinkedIn</a>
-            </div>
-        </div>
-    </section>
-
-    <div class="scroll-indicator">
-        <div class="scroll-text">Scroll to explore</div>
-        <div class="scroll-arrow">↓</div>
-    </div>
-
-    <div class="content-bg">
-    <!-- WHAT I DO SECTION -->
-    <section id="what-i-do">
-        <div class="section-container">
-            <h2 class="section-title">What I Do<span class="title-underline"></span></h2>
-            <div class="pillars-grid">
-                <div class="pillar">
-                    <span class="pillar-icon">🔐</span>
-                    <h3>Data Governance & Quality</h3>
-                    <ul>
-                        <li>Frameworks from scratch (USE/BUILD/OPERATE, LGPD)</li>
-                        <li>DataHub 500k+ assets, Federated Governance</li>
-                        <li>PySpark observability −40% incidents</li>
-                    </ul>
-                </div>
-                <div class="pillar">
-                    <span class="pillar-icon">⚙️</span>
-                    <h3>Data Engineering</h3>
-                    <ul>
-                        <li>300+ pipelines (Python/PySpark/Airflow/GCP)</li>
-                        <li>95% SLA, hundreds of TB/month</li>
-                        <li>BigQuery, REST APIs, Data Contracts</li>
-                    </ul>
-                </div>
-                <div class="pillar">
-                    <span class="pillar-icon">🤖</span>
-                    <h3>AI Leadership</h3>
-                    <ul>
-                        <li>MCP agents in production (Jira Auditor, Auto-Doc)</li>
-                        <li>−75% delivery cycles, −50% overhead</li>
-                        <li>20+ squads, 4 LatAm countries</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- EXPERIENCE SECTION -->
-    <section id="experience">
-        <div class="section-container">
-            <h2 class="section-title">Experience<span class="title-underline"></span></h2>
-            <div class="experience-grid">
-                <div class="experience-card">
-                    <h3>Scanntech</h3>
-                    <div class="role">Data Quality & Governance Manager (CDAO)</div>
-                    <div class="dates">2024–present</div>
-                    <ul>
-                        <li>AI Adoption Framework (USE/BUILD/OPERATE)</li>
-                        <li>Production agents: Jira Auditor, Auto-Doc, Roadmap Generator</li>
-                        <li>−75% delivery cycles, −50% overhead, 20+ squads</li>
-                    </ul>
-                </div>
-                <div class="experience-card">
-                    <h3>Telecom Argentina</h3>
-                    <div class="role">Data Governance Team Leader & Tech Lead</div>
-                    <div class="dates">2021–2024</div>
-                    <ul>
-                        <li>300+ ETL/ELT pipelines (Python, Airflow, GCP)</li>
-                        <li>Real-time BigQuery dashboards, 50+ stakeholders</li>
-                        <li>100% team adoption, 10 business areas</li>
-                    </ul>
-                </div>
-                <div class="experience-card">
-                    <h3>Telecom Argentina</h3>
-                    <div class="role">Team Leader Headend</div>
-                    <div class="dates">2019–2021</div>
-                    <ul>
-                        <li>Digital transformation to data-centric model</li>
-                        <li>100% staff adoption, union negotiations</li>
-                        <li>Automated pipelines + KPI dashboards</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- PROJECTS SECTION -->
-    <section id="projects">
-        <div class="section-container">
-            <h2 class="section-title">Featured Projects<span class="title-underline"></span></h2>
-            <div class="projects-grid">
-                <div class="project-card">
-                    <h3>MCP Data Agents</h3>
-                    <div class="description">Jira Auditor, Auto-Documentation, Roadmap Generator</div>
-                    <div class="tech"><strong>Tech:</strong> MCP, Anthropic Claude API, DataHub</div>
-                    <div class="result">−40% incidents, 100% CDEs documented</div>
-                    <a href="https://github.com/guido-tomasella" class="project-link" target="_blank">GitHub →</a>
-                </div>
-                <div class="project-card">
-                    <h3>LangGraph RAG System</h3>
-                    <div class="description">Hybrid RAG with BM25, dense embeddings, RRF, CRAG loop, ReAct</div>
-                    <div class="tech"><strong>Tech:</strong> LangGraph, Qdrant, Langfuse, FastAPI</div>
-                    <div class="result">287 tests, recall@k=1.0, +0.334 answer_match</div>
-                    <a href="https://github.com/guido-tomasella" class="project-link" target="_blank">GitHub →</a>
-                </div>
-                <div class="project-card">
-                    <h3>Data Governance Framework</h3>
-                    <div class="description">USE/BUILD/OPERATE playbooks, gates, Shadow AI mitigation</div>
-                    <div class="tech"><strong>Tech:</strong> YAML, Policies, Assessment templates</div>
-                    <div class="result">Used in 20+ squads, 4 LatAm countries</div>
-                    <a href="https://github.com/guido-tomasella" class="project-link" target="_blank">GitHub →</a>
-                </div>
-                <div class="project-card">
-                    <h3>PySpark Quality Framework</h3>
-                    <div class="description">CDE profiling, dynamic thresholds, real-time alerting</div>
-                    <div class="tech"><strong>Tech:</strong> PySpark, Python, Airflow integration</div>
-                    <div class="result">−40% incidents, 100% coverage</div>
-                    <a href="https://github.com/guido-tomasella" class="project-link" target="_blank">GitHub →</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- METRICS SECTION -->
-    <section id="metrics">
-        <div class="section-container">
-            <h2 class="section-title">Impact<span class="title-underline"></span></h2>
-            <div class="metrics-grid">
-                <div class="metric">
-                    <div class="metric-number" data-target="75">0</div>
-                    <div class="metric-label">% reduction in delivery cycles</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-number" data-target="50">0</div>
-                    <div class="metric-label">% reduction in admin overhead</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-number" data-target="40">0</div>
-                    <div class="metric-label">% reduction in quality incidents</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-number" data-target="500000">0</div>
-                    <div class="metric-label">data assets governed</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-number" data-target="300">0</div>
-                    <div class="metric-label">production pipelines</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-number" data-target="10">0</div>
-                    <div class="metric-label">Data Engineers trained</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- EDUCATION SECTION -->
-    <section id="education">
-        <div class="section-container">
-            <h2 class="section-title">Education<span class="title-underline"></span></h2>
-            <div class="education-timeline">
-                <div class="education-item">
-                    <div class="education-content">
-                        <h3>UCASAL</h3>
-                        <div class="degree">Master's in Data Science & AI</div>
-                        <div class="year">2025–2026 (in progress)</div>
-                    </div>
-                </div>
-                <div class="education-item">
-                    <div class="education-content">
-                        <h3>Universidad Nacional de La Matanza</h3>
-                        <div class="degree">Electrical, Electronic & Communications Engineering</div>
-                        <div class="year">2010–2020</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- CONTACT SECTION -->
-    <section id="contact">
-        <div class="contact-content">
-            <h2 class="section-title">Let's work together<span class="title-underline"></span></h2>
-            <a href="/cdn-cgi/l/email-protection#3354465a575c1d475b565f5a5c5d73545e525a5f1d505c5e" class="contact-email"><span class="__cf_email__" data-cfemail="1d7a6874797233697578717472735d7a707c7471337e7270">[email&#160;protected]</span></a>
-            <div class="contact-links">
-                <a href="https://linkedin.com/in/guido-tomasella-06222885" class="contact-link" target="_blank">LinkedIn</a>
-                <a href="https://github.com/guido-tomasella" class="contact-link" target="_blank">GitHub</a>
-                <a href="cv.pdf" class="contact-link" download>Download CV</a>
-            </div>
-            <div class="footer-text">© 2024 Guido Tomasella. Crafted with precision.</div>
-        </div>
-    </section>
-    </div>
-
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
-    <script type="module" src="js/main.js"></script>
-</body>
+    <script type="module" src="/src/main.js"></script>
+  </body>
 </html>
