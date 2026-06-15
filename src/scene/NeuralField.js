@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
-import { dispersedCloud, sampleText } from './shapes.js';
+import { dispersedCloud, fibonacciSphere, sampleText } from './shapes.js';
 
 const VERT = /* glsl */ `
   attribute float aSize;
@@ -99,11 +99,13 @@ export class NeuralField {
     const burst = new Float32Array(dispersed.length);
     for (let i = 0; i < burst.length; i++) burst[i] = dispersed[i] * 2.0;
     this.shapes = [
-      dispersed,
-      neural,
-      sampleText('GT', N, { fontSize: 280 }),
-      sampleText("LET'S BUILD", N, { fontSize: 150 }),
-      burst,
+      dispersed, // 0 DISPERSED
+      neural, // 1 NEURAL
+      sampleText('GT', N, { fontSize: 280 }), // 2 GT
+      sampleText("LET'S BUILD", N, { fontSize: 150 }), // 3 BUILD
+      burst, // 4 BURST (radial blast)
+      fibonacciSphere(N, 3.2), // 5 SPHERE (well-defined)
+      fibonacciSphere(N, 0.05), // 6 POINT (collapsed to a dot)
     ];
 
     const positions = new Float32Array(this.shapes[0]); // start dispersed

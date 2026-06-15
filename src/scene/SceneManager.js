@@ -21,6 +21,7 @@ export class SceneManager {
     this._ty = 0;
     this._px = 0;
     this._py = 0;
+    this.scripted = false; // when true, an external timeline owns the camera (intro cinematic)
     this.clock = new THREE.Clock();
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -180,14 +181,16 @@ export class SceneManager {
     const dt = this.clock.getDelta();
     const t = this.clock.elapsedTime;
     if (document.hidden) return; // don't render while the tab is backgrounded
-    this.controls.update();
-    if (!this.reduced) {
-      // Lusion-style parallax: rotate the camera VIEW toward the pointer (NOT its position),
-      // so the field never shrinks and OrbitControls' state isn't corrupted by feedback.
-      this._tx += (this._px - this._tx) * 0.06;
-      this._ty += (this._py - this._ty) * 0.06;
-      this.camera.rotateY(this._tx * 0.1);
-      this.camera.rotateX(-this._ty * 0.1);
+    if (!this.scripted) {
+      this.controls.update();
+      if (!this.reduced) {
+        // Lusion-style parallax: rotate the camera VIEW toward the pointer (NOT its position),
+        // so the field never shrinks and OrbitControls' state isn't corrupted by feedback.
+        this._tx += (this._px - this._tx) * 0.06;
+        this._ty += (this._py - this._ty) * 0.06;
+        this.camera.rotateY(this._tx * 0.1);
+        this.camera.rotateX(-this._ty * 0.1);
+      }
     }
     if (this.dust && !this.reduced) this.dust.rotation.y += dt * 0.01;
     if (this.nebula && !this.reduced) {

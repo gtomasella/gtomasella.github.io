@@ -4,6 +4,8 @@
  * Each section is a large, quiet petroleum panel (no numbering, no HUD chrome): the
  * title carries the section, with a short gold accent rule. Headlines are serif (Newsreader).
  */
+import portrait from './assets/portrait.png';
+
 export function buildSections(content, mount) {
   const { identity, hats, amplifier, experience, projects, contact } = content;
   const li = (arr) => arr.map((d) => `<li>${d}</li>`).join('');
@@ -75,9 +77,10 @@ export function buildSections(content, mount) {
 
   const contactSec = frame(
     'contact',
+    `<div class="portrait"><img src="${portrait}" alt="Guido Tomasella" loading="lazy" /></div>`,
     `<h2 class="contact__headline">${contact.headline}</h2>
-     <a class="contact__email" href="mailto:${contact.email}">${contact.email}</a>`,
-    `<div class="contact__links">${contact.links
+     <a class="contact__email" href="mailto:${contact.email}">${contact.email}</a>
+     <div class="contact__links">${contact.links
       .map((l) => `<a href="${l.url}" target="_blank" rel="noopener">${l.label}<span class="sr-only"> (opens in new tab)</span></a>`)
       .join('')}</div>
      <button class="contact__top" type="button"><span aria-hidden="true">↑ </span>Back to the start</button>`,
