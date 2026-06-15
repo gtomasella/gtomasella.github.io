@@ -40,7 +40,8 @@ if (reduced) {
   gsap.to(field, { introFactor: 1, duration: 1.6, ease: 'power2.out' });
 
   // Chrome stays hidden over the textless dispersed opening.
-  gsap.set(['.topbar', '#hero [data-hero]'], { opacity: 0, y: 16 });
+  gsap.set('.topbar', { opacity: 0, y: -12 });
+  gsap.set('#hero .frame', { autoAlpha: 0 }); // hidden until its discrete snap, so it never peeks
 
   // INTRO journey: dispersed -> neural network (labels explored) -> GT.
   ScrollTrigger.create({
@@ -61,9 +62,8 @@ if (reduced) {
     onEnterBack: () => gsap.killTweensOf(field, 'labelStrength'),
   });
 
-  // Hero chrome resolves in as GT forms.
-  gsap.to('.topbar', { opacity: 1, y: 0, duration: 1, scrollTrigger: { trigger: '#hero', start: 'top 80%' } });
-  gsap.to('#hero [data-hero]', { opacity: 1, y: 0, duration: 1, stagger: 0.12, ease: 'power3.out', scrollTrigger: { trigger: '#hero', start: 'top 78%' } });
+  // Top bar resolves in as we approach the hero (the hero frame is revealed on its snap, below).
+  gsap.to('.topbar', { opacity: 1, y: 0, duration: 1, scrollTrigger: { trigger: '#hero', start: 'top 85%' } });
 
   // Contact payoff: GT -> "LET'S BUILD" (completes as the contact section snaps to the top).
   ScrollTrigger.create({
@@ -133,6 +133,7 @@ if (reduced) {
       const next = step + dir;
       if (next < 0) {
         active = false; // hand control back to the continuous intro
+        gsap.to('#hero .frame', { autoAlpha: 0, duration: 0.3 });
         gsap.to(window, { scrollTo: Math.max(0, topOf('#hero') - window.innerHeight * 0.75), duration: 0.7, ease: 'power2.inOut' });
         return;
       }
@@ -157,11 +158,20 @@ if (reduced) {
         active = true;
         step = 0;
         lock = true;
-        setTimeout(() => (lock = false), 520);
-        gsap.to(window, { scrollTo: topOf('#hero'), duration: 0.5, ease: 'power2.out' }); // snap hero centred
+        setTimeout(() => (lock = false), 600);
+        // Snap to the hero with its frame still hidden, then reveal the WHOLE frame at once.
+        gsap.to(window, {
+          scrollTo: topOf('#hero'),
+          duration: 0.35,
+          ease: 'power2.out',
+          onComplete: () => {
+            gsap.to('#hero .frame', { autoAlpha: 1, duration: 0.4 });
+            gsap.from('#hero [data-hero]', { y: 22, opacity: 0, stagger: 0.1, duration: 0.7, ease: 'power3.out', delay: 0.1 });
+          },
+        });
       },
-      onEnterBack: () => { active = true; },
-      onLeaveBack: () => { active = false; },
+      onEnterBack: () => { active = true; gsap.set('#hero .frame', { autoAlpha: 1 }); },
+      onLeaveBack: () => { active = false; gsap.to('#hero .frame', { autoAlpha: 0, duration: 0.3 }); },
     });
 
     window.addEventListener('wheel', (e) => {
