@@ -96,9 +96,8 @@ body {
 .panel--contact .frame__body { grid-template-columns: 0.85fr 1.15fr; justify-items: start; text-align: left; gap: clamp(1.6rem, 4vw, 3.5rem); align-items: center; }
 .panel--contact .contact__links { justify-content: flex-start; }
 .portrait { position: relative; width: 100%; max-width: 300px; aspect-ratio: 3 / 4; border-radius: 14px; overflow: hidden; border: 1px solid var(--line-strong); }
-.portrait img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; display: block; filter: grayscale(1) contrast(1.06); }
-.portrait::before { content: ''; position: absolute; inset: 0; background: #0e1417; mix-blend-mode: multiply; opacity: 0.5; }
-.portrait::after { content: ''; position: absolute; inset: 0; background: #e3b23c; mix-blend-mode: screen; opacity: 0.3; }
+.portrait img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; display: block; filter: contrast(1.05) saturate(1.05) brightness(0.99); }
+.portrait::after { content: ''; position: absolute; inset: 0; background: linear-gradient(150deg, rgba(14, 20, 23, 0.3) 0%, rgba(227, 178, 60, 0.16) 100%); mix-blend-mode: soft-light; }
 @media (max-width: 860px) {
   .panel--contact .frame__body { grid-template-columns: 1fr; justify-items: center; text-align: center; }
   .panel--contact .contact__links { justify-content: center; }
@@ -182,7 +181,7 @@ body {
 /* graph labels (CSS2D) */
 .kg-label { font-family: var(--mono); font-size: 13.5px; letter-spacing: 0.01em; color: #e8ecea; white-space: nowrap;
   transform: translate(12px, -50%); pointer-events: none; text-shadow: 0 0 12px rgba(5, 9, 11, 1), 0 1px 5px rgba(5, 9, 11, 1);
-  transition: color 0.18s ease, font-size 0.18s ease, font-weight 0.18s ease; }
+  transition: color 0.12s ease, font-size 0.12s ease, font-weight 0.12s ease; }
 .kg-label--hub { color: #ffffff; }
 .kg-label--hover { color: var(--accent-soft); font-size: 16.5px; font-weight: 700; }
 

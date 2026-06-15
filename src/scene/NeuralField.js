@@ -73,6 +73,7 @@ export class NeuralField {
     this.nodes = graphData.nodes;
     this.NH = this.nodes.length;
     this.hovered = -1;
+    this.forcedHover = null; // null = pointer-driven; >=0 forces that label; -1 forces none
     this.labelStrength = 0;
     this.introFactor = 1;
     this._proj = new THREE.Vector3();
@@ -301,7 +302,9 @@ export class NeuralField {
       }
     }
     if (!canHover) hi = -1;
-    if (hi !== this.hovered) { this.hovered = hi; this._applyHover(); }
+    // A scripted timeline can force the highlight (intro label sweep); otherwise it's pointer-driven.
+    const target = this.forcedHover != null ? this.forcedHover : hi;
+    if (target !== this.hovered) { this.hovered = target; this._applyHover(); }
 
     const ep = this.edgePos;
     for (let e = 0; e < this.edges.length; e++) {

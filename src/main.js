@@ -76,8 +76,9 @@ if (reduced) {
 
   const tl = gsap.timeline({ onComplete: finishIntro });
 
-  // 1) Two seconds of lateral spin from the opening position (particles still dispersed).
-  tl.to(rot, { y: '+=' + Math.PI * 1.6, duration: 2, ease: 'none' }, 0);
+  // 1) Lateral spin from the opening position, easing IN (slow -> faster) so it flows straight into
+  // the tumble below with no stop. Particles still dispersed.
+  tl.to(rot, { y: '+=' + Math.PI * 1.4, duration: 2, ease: 'sine.in' }, 0);
 
   // 2) Camera arcs from the front, up to an overhead vantage, and smoothly back to the front in ONE
   // continuous move (no stop/hold) so it never "cuts" when it changes direction.
@@ -94,13 +95,15 @@ if (reduced) {
     },
   }, 2);
 
-  // 3) The cloud compresses into a well-defined sphere while tumbling on every axis (seen from above).
-  tl.to(seg, { a: 1, duration: 2.3, ease: 'power2.inOut', onUpdate: () => field.setSegment(SHAPE.DISPERSED, SHAPE.SPHERE, seg.a) }, 2.3);
-  tl.to(rot, { y: '+=' + Math.PI * 3, x: '+=' + Math.PI * 1.2, duration: 2.5, ease: 'none' }, 2.3);
+  // 3) The spin keeps going (now tumbling on every axis) without ever stopping — it only "ends" once
+  // the field is a point, where the stop is invisible. Meanwhile the cloud compresses into a
+  // well-defined sphere, seen from the overhead camera.
+  tl.to(rot, { y: '+=' + Math.PI * 4.2, x: '+=' + Math.PI * 1.4, duration: 3.7, ease: 'none' }, 2);
+  tl.to(seg, { a: 1, duration: 2.3, ease: 'power1.inOut', onUpdate: () => field.setSegment(SHAPE.DISPERSED, SHAPE.SPHERE, seg.a) }, 2.3);
 
-  // 4) The sphere shrinks to a single point (the camera is already arcing back to the front).
-  tl.to(seg, { b: 1, duration: 1.0, ease: 'power2.in', onUpdate: () => field.setSegment(SHAPE.SPHERE, SHAPE.POINT, seg.b) }, 4.7);
-  // Snap orientation to front while the field is a formless point (invisible), so GT lands facing us.
+  // 4) The sphere shrinks to a single point (camera already arcing back to front; spin still going).
+  tl.to(seg, { b: 1, duration: 1.0, ease: 'power1.in', onUpdate: () => field.setSegment(SHAPE.SPHERE, SHAPE.POINT, seg.b) }, 4.7);
+  // Snap orientation to front while the field is a formless point (invisible), so the rest faces us.
   tl.set(rot, { x: 0, y: 0, z: 0 }, 5.75);
 
   // 5) The point EXPLODES outward, punctuated by a quick zoom-in then zoom-out.
@@ -108,19 +111,32 @@ if (reduced) {
   tl.to(cam, { zoom: 2.2, duration: 0.35, ease: 'power2.out', onUpdate: () => cam.updateProjectionMatrix() }, 5.7);
   tl.to(cam, { zoom: 1.0, duration: 0.7, ease: 'power2.inOut', onUpdate: () => cam.updateProjectionMatrix() }, 6.05);
 
-  // 6) Out of the blast, the neural network forms (labels read).
+  // 6) Out of the blast, the neural network forms and the labels read.
+  tl.set(field, { forcedHover: -1 }, 6.3); // no stray pointer-hover while the network assembles
   tl.to(seg, { d: 1, duration: 1.2, ease: 'power2.inOut', onUpdate: () => field.setSegment(SHAPE.BURST, SHAPE.NEURAL, seg.d) }, 6.3);
-  tl.to(field, { labelStrength: 1, duration: 0.8 }, 6.6);
+  tl.to(field, { labelStrength: 1, duration: 0.8 }, 6.7);
+
+  // 6b) Hold the network FIXED and sweep the labels one at a time — highlight one, drop it, next —
+  // so each skill reads on its own before the journey continues.
+  const NL = field.labels.length;
+  const sweep = { i: 0 };
+  tl.to(sweep, {
+    i: NL,
+    duration: 3,
+    ease: 'none',
+    onUpdate: () => { field.forcedHover = Math.min(NL - 1, Math.floor(sweep.i)); },
+  }, 7.6);
+  tl.set(field, { forcedHover: -1 }, 10.7); // release the last highlight
 
   // 7) The network resolves into GT — the hero — and the chrome resolves in.
-  tl.to(seg, { e: 1, duration: 1.1, ease: 'power2.inOut', onUpdate: () => field.setSegment(SHAPE.NEURAL, SHAPE.GT, seg.e) }, 7.6);
-  tl.to(field, { labelStrength: 0.3, duration: 0.8 }, 7.6);
-  tl.to('.topbar', { autoAlpha: 1, duration: 0.6 }, 7.9);
+  tl.to(seg, { e: 1, duration: 1.2, ease: 'power2.inOut', onUpdate: () => field.setSegment(SHAPE.NEURAL, SHAPE.GT, seg.e) }, 10.8);
+  tl.to(field, { labelStrength: 0.3, duration: 0.8 }, 10.8);
+  tl.to('.topbar', { autoAlpha: 1, duration: 0.6 }, 11.2);
   tl.add(() => {
     gsap.to('#hero .frame', { autoAlpha: 1, duration: 0.5 });
     gsap.fromTo('#hero [data-hero]', { y: 22, autoAlpha: 0 }, { y: 0, autoAlpha: 1, stagger: 0.1, duration: 0.7, ease: 'power3.out' });
-  }, 8.1);
-  tl.to('.scrollcue', { autoAlpha: 1, duration: 0.5 }, 8.5);
+  }, 11.4);
+  tl.to('.scrollcue', { autoAlpha: 1, duration: 0.5 }, 11.8);
 
   // Let the user skip the cinematic with any gesture.
   const skip = () => { if (!finished) tl.progress(1); };
