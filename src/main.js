@@ -50,11 +50,11 @@ if (reduced) {
     scrub: 1,
     onUpdate: (self) => {
       const p = self.progress;
-      // Continuous morph, no static hold: scatter -> network -> GT.
-      if (p < 0.5) field.setSegment(SHAPE.DISPERSED, SHAPE.NEURAL, p / 0.5);
-      else field.setSegment(SHAPE.NEURAL, SHAPE.GT, (p - 0.5) / 0.5);
-      const formed = smooth(0.22, 0.46, p); // labels strongest as the network finishes forming
-      const toGT = smooth(0.6, 0.92, p); // and recede as GT takes over
+      // Continuous morph; the network occupies most of the intro, GT forms quickly at the end.
+      if (p < 0.78) field.setSegment(SHAPE.DISPERSED, SHAPE.NEURAL, p / 0.78);
+      else field.setSegment(SHAPE.NEURAL, SHAPE.GT, (p - 0.78) / 0.22);
+      const formed = smooth(0.28, 0.52, p); // labels appear/stay through the network
+      const toGT = smooth(0.82, 0.98, p); // recede only at the very end as GT forms
       field.labelStrength = formed * (1 - 0.7 * toGT);
     },
     onLeave: () => gsap.to(field, { labelStrength: 0.3, duration: 0.6 }), // secondary from the hero on
@@ -122,10 +122,10 @@ if (reduced) {
       const s = stops[step];
       if (s.card !== undefined) {
         const target = topOf('#projects');
-        if (Math.abs(window.scrollY - target) > 8) gsap.to(window, { scrollTo: target, duration: 0.4, ease: 'power2.out' });
+        if (Math.abs(window.scrollY - target) > 8) gsap.to(window, { scrollTo: target, duration: 0.25, ease: 'power2.out' });
         swapCard(s.card);
       } else {
-        gsap.to(window, { scrollTo: topOf(s.sel), duration: 0.4, ease: 'power2.out' });
+        gsap.to(window, { scrollTo: topOf(s.sel), duration: 0.25, ease: 'power2.out' });
       }
     }
 
@@ -144,16 +144,22 @@ if (reduced) {
     const gesture = (dir) => {
       if (lock) return;
       lock = true;
-      setTimeout(() => (lock = false), 440);
+      setTimeout(() => (lock = false), 300);
       move(dir);
     };
 
     // Engage the stepper while we're at/below the hero; release it back into the intro above.
     ScrollTrigger.create({
       trigger: '#hero',
-      start: 'top top',
+      start: 'top center',
       end: 'bottom top',
-      onEnter: () => { active = true; step = 0; },
+      onEnter: () => {
+        active = true;
+        step = 0;
+        lock = true;
+        setTimeout(() => (lock = false), 520);
+        gsap.to(window, { scrollTo: topOf('#hero'), duration: 0.5, ease: 'power2.out' }); // snap hero centred
+      },
       onEnterBack: () => { active = true; },
       onLeaveBack: () => { active = false; },
     });
