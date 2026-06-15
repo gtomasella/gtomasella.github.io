@@ -20,7 +20,7 @@ const stage = new SceneManager(document.getElementById('webgl'), { reducedMotion
 const field = new NeuralField(content.graph, { count: small ? 1000 : 1900, reducedMotion: reduced });
 stage.add(field);
 
-const SHAPE = { DISPERSED: 0, NEURAL: 1, GT: 2, BUILD: 3 };
+const SHAPE = { DISPERSED: 0, NEURAL: 1, GT: 2, BUILD: 3, BURST: 4 };
 const smooth = (e0, e1, x) => {
   const t = Math.min(Math.max((x - e0) / (e1 - e0), 0), 1);
   return t * t * (3 - 2 * t);
@@ -43,7 +43,9 @@ if (reduced) {
   gsap.set('.topbar', { opacity: 0, y: -12 });
   gsap.set('#hero .frame', { autoAlpha: 0 }); // hidden until its discrete snap, so it never peeks
 
-  // INTRO journey: dispersed -> neural network (labels explored) -> GT.
+  // INTRO journey (scroll-driven): the camera winds up — a slow spin that accelerates while it
+  // zooms toward the centre — until it "explodes" the field outward, then zooms back out as the
+  // neural network forms, and finally GT.
   ScrollTrigger.create({
     trigger: '#intro',
     start: 'top top',
@@ -51,11 +53,28 @@ if (reduced) {
     scrub: 1,
     onUpdate: (self) => {
       const p = self.progress;
-      // Continuous morph; the network occupies most of the intro, GT forms quickly at the end.
-      if (p < 0.78) field.setSegment(SHAPE.DISPERSED, SHAPE.NEURAL, p / 0.78);
+
+      // Particles: hold dispersed while the camera winds up -> blast outward -> collapse to the
+      // network -> form GT.
+      if (p < 0.42) field.setSegment(SHAPE.DISPERSED, SHAPE.DISPERSED, 0);
+      else if (p < 0.52) field.setSegment(SHAPE.DISPERSED, SHAPE.BURST, (p - 0.42) / 0.1);
+      else if (p < 0.78) field.setSegment(SHAPE.BURST, SHAPE.NEURAL, (p - 0.52) / 0.26);
       else field.setSegment(SHAPE.NEURAL, SHAPE.GT, (p - 0.78) / 0.22);
-      const formed = smooth(0.28, 0.52, p); // labels appear/stay through the network
-      const toGT = smooth(0.82, 0.98, p); // recede only at the very end as GT forms
+
+      // Spin accelerates then settles to exactly 3 full turns by the time the network forms, so GT
+      // lands facing front. (smoothstep = slow -> fast -> settle, peaking around the blast.)
+      const wind = Math.min(p / 0.78, 1);
+      field.object3d.rotation.y = smooth(0, 1, wind) * Math.PI * 6;
+
+      // Zoom pushes in toward the blast, then pulls back out as the network resolves.
+      const zoomIn = smooth(0, 0.5, p);
+      const zoomOut = smooth(0.52, 0.72, p);
+      stage.camera.zoom = 1 + 1.5 * zoomIn - 1.5 * zoomOut;
+      stage.camera.updateProjectionMatrix();
+
+      // Labels read once the network has formed, recede as GT takes over.
+      const formed = smooth(0.58, 0.76, p);
+      const toGT = smooth(0.82, 0.98, p);
       field.labelStrength = formed * (1 - 0.7 * toGT);
     },
     onLeave: () => gsap.to(field, { labelStrength: 0.3, duration: 0.6 }), // secondary from the hero on

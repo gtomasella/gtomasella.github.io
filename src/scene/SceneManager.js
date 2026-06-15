@@ -52,6 +52,7 @@ export class SceneManager {
     });
 
     this._addDust();
+    this._addNebula();
 
     // Post-processing: subtle bloom for the signature glow.
     this.composer = new EffectComposer(this.renderer);
@@ -78,9 +79,9 @@ export class SceneManager {
     c.width = 4; c.height = 512;
     const g = c.getContext('2d');
     const grad = g.createLinearGradient(0, 0, 0, 512);
-    grad.addColorStop(0, '#14201f');
-    grad.addColorStop(0.45, '#0e1417');
-    grad.addColorStop(1, '#080d0f');
+    grad.addColorStop(0, '#15242b');
+    grad.addColorStop(0.45, '#0d161c');
+    grad.addColorStop(1, '#070d11');
     g.fillStyle = grad;
     g.fillRect(0, 0, 4, 512);
     const tex = new THREE.CanvasTexture(c);
@@ -116,6 +117,47 @@ export class SceneManager {
     this.scene.add(this.dust);
   }
 
+  // Slow, drifting glow clouds behind the field — a living "nebula" so the background isn't flat.
+  _addNebula() {
+    this.nebula = [];
+    const make = (hex, x, y, z, scale, baseOpacity) => {
+      const mat = new THREE.SpriteMaterial({
+        map: this._radialTexture(hex),
+        transparent: true,
+        opacity: baseOpacity,
+        depthWrite: false,
+        depthTest: false,
+        fog: false,
+        blending: THREE.AdditiveBlending,
+      });
+      const s = new THREE.Sprite(mat);
+      s.scale.set(scale, scale, 1);
+      s.position.set(x, y, z);
+      s.userData = { baseOpacity, x, y };
+      this.scene.add(s);
+      this.nebula.push(s);
+    };
+    make('#e3b23c', -3.2, 1.6, -9, 17, 0.12); // gold
+    make('#2f6b6b', 4.2, -2.2, -11, 22, 0.09); // petrol-teal
+  }
+
+  _radialTexture(hex) {
+    const c = document.createElement('canvas');
+    c.width = c.height = 256;
+    const g = c.getContext('2d');
+    const col = new THREE.Color(hex);
+    const rgb = `${(col.r * 255) | 0}, ${(col.g * 255) | 0}, ${(col.b * 255) | 0}`;
+    const grad = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+    grad.addColorStop(0, `rgba(${rgb}, 1)`);
+    grad.addColorStop(0.5, `rgba(${rgb}, 0.35)`);
+    grad.addColorStop(1, `rgba(${rgb}, 0)`);
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 256, 256);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
   add(system) {
     this.systems.push(system);
     if (system.object3d) this.scene.add(system.object3d);
@@ -148,6 +190,15 @@ export class SceneManager {
       this.camera.rotateX(-this._ty * 0.1);
     }
     if (this.dust && !this.reduced) this.dust.rotation.y += dt * 0.01;
+    if (this.nebula && !this.reduced) {
+      for (let i = 0; i < this.nebula.length; i++) {
+        const n = this.nebula[i];
+        const ph = i * 2.1;
+        n.material.opacity = n.userData.baseOpacity * (0.65 + 0.35 * Math.sin(t * 0.12 + ph));
+        n.position.x = n.userData.x + Math.sin(t * 0.05 + ph) * 0.9;
+        n.position.y = n.userData.y + Math.cos(t * 0.045 + ph) * 0.7;
+      }
+    }
     for (const s of this.systems) s.update?.(t, dt, this);
     this.composer.render();
     this.labelRenderer.render(this.scene, this.camera);

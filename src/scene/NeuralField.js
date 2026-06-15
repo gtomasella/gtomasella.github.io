@@ -94,11 +94,16 @@ export class NeuralField {
 
     // Morph targets. NEURAL is built with knowledge of the hub indices so hubs land on nodes.
     const neural = this._buildNeural(N, NH, hubSet);
+    const dispersed = dispersedCloud(N, 7);
+    // BURST = the dispersed cloud pushed radially outward, so the intro "explosion" blasts straight from the centre.
+    const burst = new Float32Array(dispersed.length);
+    for (let i = 0; i < burst.length; i++) burst[i] = dispersed[i] * 2.0;
     this.shapes = [
-      dispersedCloud(N, 7),
+      dispersed,
       neural,
       sampleText('GT', N, { fontSize: 280 }),
       sampleText("LET'S BUILD", N, { fontSize: 150 }),
+      burst,
     ];
 
     const positions = new Float32Array(this.shapes[0]); // start dispersed
