@@ -46,7 +46,7 @@ if (reduced) {
   ScrollTrigger.create({
     trigger: '#intro',
     start: 'top top',
-    end: 'bottom bottom',
+    end: 'bottom center',
     scrub: 1,
     onUpdate: (self) => {
       const p = self.progress;
